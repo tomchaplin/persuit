@@ -62,6 +62,13 @@ pub struct StandardAlgo<C: Column, T: Iterator<Item = (usize, C)>> {
 }
 
 impl<C: Column, T: Iterator<Item = (usize, C)>> StandardAlgo<C, T> {
+    fn new(enumerated_cols: T) -> Self {
+        StandardAlgo {
+            enumerated_cols,
+            low_inverse: HashMap::new(),
+        }
+    }
+
     fn col_with_same_low(&self, col: &C) -> Option<&C> {
         let pivot = col.pivot()?;
         self.low_inverse.get(&pivot)
@@ -111,10 +118,7 @@ where
             tx.send(enum_col).unwrap();
         }
     });
-    StandardAlgo {
-        enumerated_cols: rx.into_iter(),
-        low_inverse: HashMap::new(),
-    }
+    StandardAlgo::new(rx.into_iter())
 }
 
 pub fn persuit_serial<C, T>(col_iterator: T) -> StandardAlgo<C, Enumerate<T>>
@@ -122,10 +126,7 @@ where
     T: Iterator<Item = C> + Send + 'static,
     C: Column + 'static,
 {
-    StandardAlgo {
-        enumerated_cols: col_iterator.enumerate(),
-        low_inverse: HashMap::new(),
-    }
+    StandardAlgo::new(col_iterator.enumerate())
 }
 
 #[cfg(test)]
