@@ -1,21 +1,21 @@
 from persuit import std_persuit
 from pprint import pprint
 import time
-from data.wedge_of_two_k20 import test_sparse_mat
+#from data.wedge_of_two_k20 import test_sparse_mat
 
-# test_sparse_mat = [
-#    [],
-#    [],
-#    [],
-#    [],
-#    [0, 1],
-#    [1, 2],
-#    [2, 3],
-#    [0, 3],
-#    [0, 2],
-#    [6, 7, 8],
-#    [4, 5, 8],
-# ]
+test_sparse_mat = [
+   [],
+   [],
+   [],
+   [],
+   [0, 1],
+   [1, 2],
+   [2, 3],
+   [0, 3],
+   [0, 2],
+   [6, 7, 8],
+   [4, 5, 8],
+]
 
 
 class SlowIterator:
@@ -44,7 +44,7 @@ print("Finished persistence computation")
 toc = time.time()
 elapsed1 = toc - tic
 
-time.sleep(5)
+time.sleep(1)
 
 # Option 2: Do persistence in parallel with the sparse matrix construction
 tic = time.time()
