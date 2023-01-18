@@ -11,4 +11,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 flume = "0.10.14"
-pyo3 = { version = "0.17.3", features = ["extension-module"] , optional = true}
+pyo3 = { version = "0.17.3", features = ["extension-module"]}

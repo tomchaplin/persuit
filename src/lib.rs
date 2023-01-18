@@ -1,3 +1,5 @@
+use pyo3::prelude::*;
+use pyo3::types::PyIterator;
 use std::cmp::Ordering;
 use std::iter::Enumerate;
 use std::marker::Send;
@@ -89,6 +91,7 @@ impl<C: Column, T: Iterator<Item = (usize, C)>> Iterator for StandardAlgo<C, T> 
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(enum_col) = self.enumerated_cols.next() {
+            println!("Got column");
             let reduced = self.reduce_col(enum_col.1);
             match reduced.pivot() {
                 Some(pivot) => {
@@ -106,7 +109,7 @@ impl<C: Column, T: Iterator<Item = (usize, C)>> Iterator for StandardAlgo<C, T> 
     }
 }
 
-pub fn persuit<C, T>(col_iterator: T) -> StandardAlgo<C, flume::IntoIter<(usize, C)>>
+pub fn std_persuit<C, T>(col_iterator: T) -> StandardAlgo<C, flume::IntoIter<(usize, C)>>
 where
     T: Iterator<Item = C> + Send + 'static,
     C: Column + 'static,
@@ -121,12 +124,54 @@ where
     StandardAlgo::new(rx.into_iter())
 }
 
-pub fn persuit_serial<C, T>(col_iterator: T) -> StandardAlgo<C, Enumerate<T>>
+pub fn std_persuit_collected<C, T>(col_iterator: T) -> Vec<Pairing>
+where
+    T: Iterator<Item = C>,
+    C: Column + 'static,
+{
+    let (tx, rx) = flume::unbounded();
+    let receiver = thread::spawn(move || {
+        StandardAlgo::new(
+            rx.iter()
+                .take_while(|msg: &Option<(usize, C)>| msg.is_some())
+                .map(|msg| msg.unwrap()),
+        )
+        .collect()
+    });
+    let mut enumerated_cols = col_iterator.enumerate();
+    while let Some(enum_col) = enumerated_cols.next() {
+        tx.send(Some(enum_col)).unwrap();
+    }
+    println!("Finished sending columns");
+    // Tell receiver that we're done
+    tx.send(None).unwrap();
+    receiver.join().expect("Panic in StandardAlgo")
+}
+
+pub fn std_persuit_serial<C, T>(col_iterator: T) -> StandardAlgo<C, Enumerate<T>>
 where
     T: Iterator<Item = C> + Send + 'static,
     C: Column + 'static,
 {
     StandardAlgo::new(col_iterator.enumerate())
+}
+
+#[pyfunction]
+#[pyo3(name = "std_persuit")]
+fn std_persuit_py(iterator: &PyIterator) -> Vec<Pairing> {
+    let columns = iterator
+        .map(|i| {
+            i.and_then(PyAny::extract::<Vec<usize>>)
+                .expect("Could not parse sparse columns from iterator")
+        })
+        .map(|col| VecColumn { col });
+    std_persuit_collected(columns)
+}
+
+#[pymodule]
+fn persuit(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(std_persuit_py, m)?)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -150,7 +195,7 @@ mod tests {
             })
             .map(|l| VecColumn { col: l })
             .collect();
-        let pairings: Vec<Pairing> = persuit(columns.into_iter()).collect();
+        let pairings: Vec<Pairing> = std_persuit(columns.into_iter()).collect();
         let correct = vec![(1, 4), (2, 5), (3, 6), (8, 9), (7, 10)];
         assert_eq!(pairings, correct)
     }
