@@ -78,7 +78,9 @@ Meanwhile, the main thread is reducing columns of this sparse matrix as soon as 
 - [ ] Try out linked lists and `bitvec` as Column types
 - [ ] Return (Lex-optimal) representatives
 - [x] Python bindings
-- [ ] Implement other, alternative algorithms, e.g. clear and compress?
+- [ ] Implement other PH algorithms, e.g. clear and compress?
 - [ ] Implement parallel over dimensions?
 - [x] Write a basic README
 - [ ] Find example where this actually does speed up PH (need PH computation to be a significant portion of the time)
+- [ ] Write tests (unit, integration + property)
+- [ ] Benchmark
