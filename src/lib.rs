@@ -91,7 +91,6 @@ impl<C: Column, T: Iterator<Item = (usize, C)>> Iterator for StandardAlgo<C, T> 
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(enum_col) = self.enumerated_cols.next() {
-            println!("Got column");
             let reduced = self.reduce_col(enum_col.1);
             match reduced.pivot() {
                 Some(pivot) => {
@@ -142,7 +141,6 @@ where
     while let Some(enum_col) = enumerated_cols.next() {
         tx.send(Some(enum_col)).unwrap();
     }
-    println!("Finished sending columns");
     // Tell receiver that we're done
     tx.send(None).unwrap();
     receiver.join().expect("Panic in StandardAlgo")
@@ -150,8 +148,8 @@ where
 
 pub fn std_persuit_serial<C, T>(col_iterator: T) -> StandardAlgo<C, Enumerate<T>>
 where
-    T: Iterator<Item = C> + Send + 'static,
-    C: Column + 'static,
+    T: Iterator<Item = C>,
+    C: Column,
 {
     StandardAlgo::new(col_iterator.enumerate())
 }
@@ -165,12 +163,27 @@ fn std_persuit_py(iterator: &PyIterator) -> Vec<Pairing> {
                 .expect("Could not parse sparse columns from iterator")
         })
         .map(|col| VecColumn { col });
+    println!("Start persistence computation");
     std_persuit_collected(columns)
+}
+
+#[pyfunction]
+#[pyo3(name = "std_persuit_serial")]
+fn std_persuit_serial_py(iterator: &PyIterator) -> Vec<Pairing> {
+    let columns = iterator
+        .map(|i| {
+            i.and_then(PyAny::extract::<Vec<usize>>)
+                .expect("Could not parse sparse columns from iterator")
+        })
+        .map(|col| VecColumn { col });
+    println!("Start persistence computation");
+    std_persuit_serial(columns).collect()
 }
 
 #[pymodule]
 fn persuit(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(std_persuit_py, m)?)?;
+    m.add_function(wrap_pyfunction!(std_persuit_serial_py, m)?)?;
     Ok(())
 }
 
