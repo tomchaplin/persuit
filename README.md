@@ -1,6 +1,6 @@
 # persuit
 
-Persuit is an experimental persistent homology (PH) library, which aims to speed up your PH computation by reducing the boundary matrix **while** it is being constructed.
+Persuit is an experimental persistent homology (PH) library, which aims to speed up your PH pipeline by reducing the boundary matrix **whilst** it is being constructed.
 The library is written in Rust and Python bindings are provided via PyO3.
 
 > **Warning**
