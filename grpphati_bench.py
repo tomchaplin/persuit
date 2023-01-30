@@ -44,6 +44,14 @@ pipeline_serial = make_grounded_pipeline(
         optimisation_strat = None
         )
 
+pipeline_serial_bv = make_grounded_pipeline(
+        ShortestPathFiltration,
+        RegularPathHomology,
+        backend = PersuitBackend(in_parallel=False, internal='bitset'),
+        optimisation_strat = None
+        )
+
+
 N= 200
 G6 = nx.complete_graph(N, create_using=nx.DiGraph)
 #print(G6.number_of_nodes())
@@ -61,29 +69,41 @@ G6 = nx.complete_graph(N, create_using=nx.DiGraph)
 tic1 = time.time()
 
 print("Start")
-pipeline(G6)
+out = pipeline(G6)
+print(len(out.barcode))
 print("End")
 
 tic2 = time.time()
 
 print("Start")
-pipeline_serial(G6)
+out = pipeline_serial(G6)
+print(len(out.barcode))
 print("End")
 
 tic3 = time.time()
 
 print("Start")
-phat_pipeline(G6)
+out = pipeline_serial_bv(G6)
+print(len(out.barcode))
 print("End")
 
 tic4 = time.time()
 
 print("Start")
-phat_twist_pipeline(G6)
+out = phat_pipeline(G6)
+print(len(out.barcode))
 print("End")
 
 tic5 = time.time()
+
+print("Start")
+out = phat_twist_pipeline(G6)
+print(len(out.barcode))
+print("End")
+
+tic6 = time.time()
 print(tic2 - tic1)
 print(tic3 - tic2)
 print(tic4 - tic3)
 print(tic5 - tic4)
+print(tic6 - tic5)

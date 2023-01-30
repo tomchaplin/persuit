@@ -10,5 +10,8 @@ name="persuit"
 crate-type = ["cdylib"]
 
 [dependencies]
+bit-set = "0.5.3"
+bitvec = "1.0.1"
+crossbeam-channel = "0.5.6"
 flume = "0.10.14"
 pyo3 = { version = "0.17.3", features = ["extension-module"]}
