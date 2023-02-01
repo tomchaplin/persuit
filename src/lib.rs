@@ -4,6 +4,7 @@ use crossbeam_channel;
 use pyo3::prelude::*;
 use pyo3::types::PyIterator;
 use std::cmp::Ordering;
+use std::collections::btree_set::BTreeSet;
 use std::iter::Enumerate;
 use std::marker::Send;
 use std::ops::{BitXor, BitXorAssign};
@@ -114,6 +115,29 @@ impl Column for BitSetColumn {
 
     fn add_col(&mut self, other: &Self) {
         self.col.symmetric_difference_with(&other.col);
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct BTreeSetColumn {
+    col: BTreeSet<usize>,
+}
+
+impl BTreeSetColumn {
+    fn from_sparse_col(sparse_col: Vec<usize>) -> Self {
+        BTreeSetColumn {
+            col: sparse_col.into_iter().collect(),
+        }
+    }
+}
+
+impl Column for BTreeSetColumn {
+    fn pivot(&self) -> Option<usize> {
+        Some(*self.col.last()?)
+    }
+
+    fn add_col(&mut self, other: &Self) {
+        self.col = self.col.symmetric_difference(&other.col).cloned().collect();
     }
 }
 
@@ -259,11 +283,25 @@ fn std_persuit_serial_bs_py(iterator: &PyIterator) -> Vec<Pairing> {
     std_persuit_serial(columns).collect()
 }
 
+#[pyfunction]
+#[pyo3(name = "std_persuit_serial_bts")]
+fn std_persuit_serial_bts_py(iterator: &PyIterator) -> Vec<Pairing> {
+    let columns = iterator
+        .map(|i| {
+            i.and_then(PyAny::extract::<Vec<usize>>)
+                .expect("Could not parse sparse columns from iterator")
+        })
+        .map(|col| BTreeSetColumn::from_sparse_col(col));
+    println!("Start persistence computation");
+    std_persuit_serial(columns).collect()
+}
+
 #[pymodule]
 fn persuit(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(std_persuit_py, m)?)?;
     m.add_function(wrap_pyfunction!(std_persuit_serial_py, m)?)?;
     m.add_function(wrap_pyfunction!(std_persuit_serial_bs_py, m)?)?;
+    m.add_function(wrap_pyfunction!(std_persuit_serial_bts_py, m)?)?;
     Ok(())
 }
 

@@ -1,7 +1,7 @@
 from grpphati.backends.abstract import Backend
 from grpphati.utils.column import SparseConstructor
 from grpphati.results import Result
-from persuit import std_persuit, std_persuit_serial, std_persuit_serial_bs
+from persuit import std_persuit, std_persuit_serial, std_persuit_serial_bs, std_persuit_serial_bts
 from pprint import pprint
 
 
@@ -19,6 +19,8 @@ class PersuitBackend(Backend):
         else:
             if self.internal == 'bitset':
                 pairs = std_persuit_serial_bs(sparse_cols)
+            elif self.internal == 'btreeset':
+                pairs = std_persuit_serial_bts(sparse_cols)
             else:
                 pairs = std_persuit_serial(sparse_cols)
         pairs.sort()

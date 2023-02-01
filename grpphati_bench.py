@@ -15,20 +15,6 @@ def timed(f):
     return (output, elapsed)
 
 
-phat_pipeline = make_grounded_pipeline(
-        ShortestPathFiltration,
-        RegularPathHomology,
-        backend = PHATBackend(reduction=reductions.standard_reduction),
-        optimisation_strat = None
-        )
-
-phat_twist_pipeline = make_grounded_pipeline(
-        ShortestPathFiltration,
-        RegularPathHomology,
-        backend = PHATBackend(reduction=reductions.twist_reduction),
-        optimisation_strat = None
-        )
-
 
 pipeline = make_grounded_pipeline(
         ShortestPathFiltration,
@@ -44,12 +30,35 @@ pipeline_serial = make_grounded_pipeline(
         optimisation_strat = None
         )
 
-pipeline_serial_bv = make_grounded_pipeline(
+pipeline_serial_bs = make_grounded_pipeline(
         ShortestPathFiltration,
         RegularPathHomology,
         backend = PersuitBackend(in_parallel=False, internal='bitset'),
         optimisation_strat = None
         )
+
+pipeline_serial_bts = make_grounded_pipeline(
+        ShortestPathFiltration,
+        RegularPathHomology,
+        backend = PersuitBackend(in_parallel=False, internal='btreeset'),
+        optimisation_strat = None
+        )
+
+phat_pipeline = make_grounded_pipeline(
+        ShortestPathFiltration,
+        RegularPathHomology,
+        backend = PHATBackend(reduction=reductions.standard_reduction),
+        optimisation_strat = None
+        )
+
+phat_twist_pipeline = make_grounded_pipeline(
+        ShortestPathFiltration,
+        RegularPathHomology,
+        backend = PHATBackend(reduction=reductions.twist_reduction),
+        optimisation_strat = None
+        )
+
+
 
 
 N= 200
@@ -83,27 +92,35 @@ print("End")
 tic3 = time.time()
 
 print("Start")
-out = pipeline_serial_bv(G6)
+out = pipeline_serial_bs(G6)
 print(len(out.barcode))
 print("End")
 
 tic4 = time.time()
 
 print("Start")
-out = phat_pipeline(G6)
+out = pipeline_serial_bts(G6)
 print(len(out.barcode))
 print("End")
 
 tic5 = time.time()
 
 print("Start")
-out = phat_twist_pipeline(G6)
+out = phat_pipeline(G6)
 print(len(out.barcode))
 print("End")
 
 tic6 = time.time()
+
+print("Start")
+out = phat_twist_pipeline(G6)
+print(len(out.barcode))
+print("End")
+
+tic7 = time.time()
 print(tic2 - tic1)
 print(tic3 - tic2)
 print(tic4 - tic3)
 print(tic5 - tic4)
 print(tic6 - tic5)
+print(tic7 - tic6)
