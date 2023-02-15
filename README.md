@@ -72,6 +72,16 @@ The way this is achieved is:
 Since the new thread is constantly consuming the iterator, we construct the sparse matrix at the usual rate.
 Meanwhile, the main thread is reducing columns of this sparse matrix as soon as it can.
 
+Currently, due to the overhead of inter-thread communication this is usually slower than the serial algorithm.
+
+## Usage
+
+The main Python bindings are `std_persuit` and `std_persuit_serial`.
+These functions take one argument: an [iterator](https://docs.python.org/3/c-api/iterator.html) over sparse columns.
+Currently, `persuit` only supports ℤ₂ homology and hence your matrix should also have enties in ℤ₂.
+The ith iterate of the provided iterator should be an increasing list of indices of the non-zero rows in the ith column of your boundary matrix.
+See [`test.py`](https://github.com/tomchaplin/persuit/blob/main/test.py) for an illustrative example.
+
 ## TODO
 
 - [ ] Try out `FnvHasMap`, `IndexMap` and `BTreeMap` for storing `low_inverse`
