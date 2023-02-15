@@ -76,6 +76,10 @@ Currently, due to the overhead of inter-thread communication this is usually slo
 
 ## Usage
 
+You can download the Python bindings via
+```
+pip install persuit
+```
 The main Python bindings are `std_persuit` and `std_persuit_serial`.
 These functions take one argument: an [iterator](https://docs.python.org/3/c-api/iterator.html) over sparse columns.
 Currently, `persuit` only supports ℤ₂ homology and hence your matrix should also have enties in ℤ₂.
