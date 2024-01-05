@@ -21,12 +21,12 @@ where
         storage.push(CachePadded::new(Mutex::new(MaybeUninit::uninit())))
     }
 
-    let mut pairings = vec![];
     // Obtain a write lock on every Mutex
     let locks: Vec<_> = storage.iter().map(|mtx| mtx.lock()).collect();
 
     thread::scope(|s| {
-        let h2 = s.spawn(|| {
+        let reducer_thread = s.spawn(|| {
+            let mut pairings = vec![];
             let mut low_inverse: HashMap<usize, &C> = HashMap::new();
             for (idx, mtx) in storage.iter().enumerate() {
                 // This will block until thread 1 sends
@@ -50,18 +50,27 @@ where
                     pairings.push((pivot, idx));
                 }
             }
+            // Return the pairings
+            pairings
         });
 
-        // Send!
+        // Send each column
         for (col, mut lock) in cols.zip(locks.into_iter()) {
             lock.write(col);
             drop(lock);
         }
 
-        h2.join().unwrap();
-    });
+        let pairings = reducer_thread.join().unwrap();
 
-    pairings
+        // Drop each column - we have to do this explicility
+        // because MaybeUninit will not run the destructor,
+        // leaving our columns unfreed
+        for mtx in storage.iter() {
+            unsafe { (*mtx.data_ptr()).assume_init_drop() }
+        }
+
+        pairings
+    })
 }
 
 #[cfg(test)]
