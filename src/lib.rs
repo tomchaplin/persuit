@@ -10,12 +10,14 @@ use std::marker::Send;
 use std::ops::{BitXor, BitXorAssign};
 use std::{collections::HashMap, thread};
 
+mod unsafe_persuit;
+
 pub trait Column: Send {
     fn pivot(&self) -> Option<usize>;
     fn add_col(&mut self, other: &Self);
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct VecColumn {
     col: Vec<usize>,
 }
@@ -271,6 +273,19 @@ fn std_persuit_serial_py(iterator: &PyIterator) -> Vec<Pairing> {
 }
 
 #[pyfunction]
+#[pyo3(name = "unsafe_persuit")]
+fn unsafe_persuit_py(iterator: &PyIterator, len: usize) -> Vec<Pairing> {
+    let columns = iterator
+        .map(|i| {
+            i.and_then(PyAny::extract::<Vec<usize>>)
+                .expect("Could not parse sparse columns from iterator")
+        })
+        .map(|col| VecColumn { col });
+    println!("Start persistence computation");
+    unsafe_persuit::unsafe_persuit(columns, len)
+}
+
+#[pyfunction]
 #[pyo3(name = "std_persuit_serial_bs")]
 fn std_persuit_serial_bs_py(iterator: &PyIterator) -> Vec<Pairing> {
     let columns = iterator
@@ -302,6 +317,7 @@ fn persuit(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(std_persuit_serial_py, m)?)?;
     m.add_function(wrap_pyfunction!(std_persuit_serial_bs_py, m)?)?;
     m.add_function(wrap_pyfunction!(std_persuit_serial_bts_py, m)?)?;
+    m.add_function(wrap_pyfunction!(unsafe_persuit_py, m)?)?;
     Ok(())
 }
 

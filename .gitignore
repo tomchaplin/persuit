@@ -2,4 +2,4 @@
 /Cargo.lock
 __pycache__
 data
-.env
+.venv
