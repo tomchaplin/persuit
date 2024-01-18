@@ -286,6 +286,19 @@ fn unsafe_persuit_py(iterator: &PyIterator, len: usize) -> Vec<Pairing> {
 }
 
 #[pyfunction]
+#[pyo3(name = "unsafe_persuit_v2")]
+fn unsafe_persuit_v2_py(iterator: &PyIterator, len: usize) -> Vec<Pairing> {
+    let columns = iterator
+        .map(|i| {
+            i.and_then(PyAny::extract::<Vec<usize>>)
+                .expect("Could not parse sparse columns from iterator")
+        })
+        .map(|col| VecColumn { col });
+    println!("Start persistence computation");
+    unsafe_persuit::unsafe_persuit_v2(columns, len)
+}
+
+#[pyfunction]
 #[pyo3(name = "std_persuit_serial_bs")]
 fn std_persuit_serial_bs_py(iterator: &PyIterator) -> Vec<Pairing> {
     let columns = iterator
@@ -318,6 +331,7 @@ fn persuit(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(std_persuit_serial_bs_py, m)?)?;
     m.add_function(wrap_pyfunction!(std_persuit_serial_bts_py, m)?)?;
     m.add_function(wrap_pyfunction!(unsafe_persuit_py, m)?)?;
+    m.add_function(wrap_pyfunction!(unsafe_persuit_v2_py, m)?)?;
     Ok(())
 }
 

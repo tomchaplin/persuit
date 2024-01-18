@@ -7,6 +7,7 @@ from persuit import (
     std_persuit_serial_bs,
     std_persuit_serial_bts,
     unsafe_persuit,
+    unsafe_persuit_v2,
 )
 from pprint import pprint
 
@@ -24,6 +25,8 @@ class PersuitBackend(Backend):
         if self.in_parallel:
             if self.internal == "unsafe":
                 pairs = unsafe_persuit(sparse_cols, len(cols))
+            elif self.internal == "unsafe_v2":
+                pairs = unsafe_persuit_v2(sparse_cols, len(cols))
             else:
                 pairs = std_persuit(sparse_cols)
         else:
